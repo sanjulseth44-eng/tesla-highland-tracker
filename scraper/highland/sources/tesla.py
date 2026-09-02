@@ -34,7 +34,12 @@ log = logging.getLogger("highland.tesla")
 INVENTORY_PAGE = f"https://www.tesla.com/inventory/used/m3?zip={HOME_ZIP}&range={LOCAL_RADIUS_MI}"
 API_URL = "https://www.tesla.com/inventory/api/v4/inventory-results"
 PAGE_SIZE = 50
-IMPERSONATION_LADDER = ["safari_ios", "safari", "chrome", "edge101", "firefox133"]
+# Tried in order; names not supported by the installed curl_cffi are skipped automatically.
+IMPERSONATION_LADDER = [
+    "safari_ios", "safari18_4_ios", "safari17_2_ios", "chrome_android", "chrome131_android",
+    "safari", "safari18_0", "safari15_5", "chrome", "chrome131", "chrome124", "chrome110",
+    "edge101", "edge99", "firefox133", "firefox135",
+]
 REQUIRED_KEYS = {"VIN", "Year", "InventoryPrice", "Odometer"}
 
 # Tesla "VRL" (delivery location) ids seen for the Houston area, for nicer dealer labels.
@@ -91,7 +96,10 @@ class TeslaSource(Source):
         """Try each fingerprint: warm up on the HTML page, then hit the API once."""
         notes: list[str] = []
         for imp in IMPERSONATION_LADDER:
-            http = Http(impersonate=imp, min_interval=self.min_interval_s, max_retries=2)
+            try:
+                http = Http(impersonate=imp, min_interval=self.min_interval_s, max_retries=1)
+            except Exception:  # fingerprint name unknown to this curl_cffi version
+                continue
             try:
                 try:
                     http.get(INVENTORY_PAGE, ok_statuses=(200, 403, 404))

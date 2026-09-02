@@ -9,31 +9,39 @@ from __future__ import annotations
 from typing import Optional
 
 MSRP: dict[tuple[int, str], int] = {
-    # 2024 (Highland launch, US deliveries from Jan 2024)
-    (2024, "RWD"): 38_990,
-    (2024, "Long Range RWD"): 42_490,   # added June 2024
-    (2024, "Long Range AWD"): 47_490,   # $45,990 at launch, +$1,500 April 2024
-    (2024, "Performance"): 52_990,      # launched April 2024; $54,990 from late 2024
-    # 2025
-    (2025, "RWD"): 38_990,              # base LFP RWD was withdrawn from the US lineup during MY2025
+    # 2024 -- Highland launch; US orders opened 2024-01-10
+    (2024, "RWD"): 38_990,             # $38,990 all year (272 mi LFP)
+    (2024, "Long Range RWD"): 42_490,  # (re)introduced July 2024 at $42,490, 363 mi
+    (2024, "Long Range AWD"): 47_490,  # $45,990 at launch, $47,490 from spring 2024 onward
+    (2024, "Performance"): 54_990,     # launched 2024-04-23 at $52,990, $53,990 days later, $54,990 from May 2024
+    # 2025 -- same prices; base RWD faded out of the US lineup during MY2025
+    (2025, "RWD"): 38_990,
     (2025, "Long Range RWD"): 42_490,
     (2025, "Long Range AWD"): 47_490,
     (2025, "Performance"): 54_990,
-    # 2026 (Oct 2025 lineup: Standard / Premium RWD / Premium AWD / Performance)
+    (2025, "Standard"): 36_990,        # in case an early "Model 3 Standard" carries a 2025 VIN
+    # 2026 -- lineup renamed 2025-10-07: Standard / Premium RWD / Premium AWD / Performance
     (2026, "Standard"): 36_990,
-    (2026, "Long Range RWD"): 42_490,   # sold as "Model 3 Premium RWD"
-    (2026, "Long Range AWD"): 47_490,   # sold as "Model 3 Premium AWD"
+    (2026, "Long Range RWD"): 42_490,  # sold as "Model 3 Premium RWD"
+    (2026, "Long Range AWD"): 47_490,  # sold as "Model 3 Premium AWD"
     (2026, "Performance"): 54_990,
 }
 
 NOTES: dict[str, str] = {
-    "basis": "Base MSRP at the start of the model year, before destination ($1,390) and order fees; "
-             "options such as paint, wheels, interior and FSD are not included.",
-    "2024 Long Range AWD": "$45,990 at the January 2024 launch, raised to $47,490 in April 2024.",
-    "2024 Performance": "Launched April 2024 at $52,990; $54,990 by the end of 2024.",
-    "2025 RWD": "Only a small number of MY2025 base RWD cars exist; Tesla dropped the trim from the US lineup.",
-    "2026 naming": "Tesla renamed Long Range RWD/AWD to Premium RWD/AWD for 2026 and added the cheaper 'Standard'. "
-                   "The dashboard maps Premium -> Long Range so year buckets stay comparable.",
+    "basis": "Base MSRP before Tesla's destination ($1,390) and order ($250) fees; paint, wheels, interior and "
+             "FSD options are not included. Where Tesla changed the price mid-year the prevailing price for that "
+             "model year is used.",
+    "2024 Long Range AWD": "$45,990 at the January 2024 launch; raised to $47,490 in spring 2024 and held there.",
+    "2024 Performance": "Launched 2024-04-23 at $52,990, $53,990 within days, $54,990 from May 2024 "
+                        "(Electrek, InsideEVs).",
+    "2024 Long Range RWD": "Added to the US lineup in July 2024 at $42,490 with 363 mi EPA range (Electrek).",
+    "2025 RWD": "The $38,990 base RWD was phased out of the US lineup during the 2025 model year; few exist.",
+    "2026 naming": "On 2025-10-07 Tesla renamed Long Range RWD/AWD to Premium RWD/AWD ($42,490 / $47,490) and added "
+                   "the cheaper Model 3 Standard at $36,990 (321 mi). The dashboard maps Premium -> Long Range so "
+                   "year buckets stay comparable; Standard is its own trim.",
+    "sources": "electrek.co/2024/07/12 (LR RWD), electrek.co/2024/04/26 + insideevs.com/news/720137 (Performance), "
+               "insideevs.com/news/704076 + greencarreports.com (Jan 2024 launch prices), "
+               "edmunds.com 2026 pricing guide + teslamotorsclub 2025-10-07 thread (Standard/Premium).",
 }
 
 
