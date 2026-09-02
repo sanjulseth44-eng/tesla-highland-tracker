@@ -1,0 +1,23 @@
+{
+  "name": "tesla-highland-tracker-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Static dashboard for used 2024+ Tesla Model 3 (Highland) listings around Sugar Land, TX 77479",
+  "scripts": {
+    "predev": "node scripts/copy-data.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/copy-data.mjs",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.2.2"
+  }
+}

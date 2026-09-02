@@ -1,0 +1,103 @@
+# Daily refresh: scrape every source -> commit SQLite + JSON -> build the React app -> deploy to GitHub Pages.
+# Also runs on every push to main (build/deploy only, no scrape) so code changes go live immediately.
+name: refresh
+on:
+  schedule:
+    - cron: "30 11 * * *"      # 06:30 America/Chicago (CDT) / 05:30 CST — once a day
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "comma-separated source keys (blank = all)"
+        required: false
+        default: ""
+  push:
+    branches: [main]
+    paths-ignore:
+      - "data/**"              # the bot's own data commits must not retrigger a build loop
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scraper/requirements.txt
+
+      - name: Install scraper deps
+        run: pip install -r scraper/requirements.txt pytest
+
+      - name: Unit tests
+        run: python -m pytest scraper/tests -q
+
+      - name: Scrape all sources
+        if: github.event_name != 'push'
+        env:
+          SOURCES: ${{ github.event.inputs.sources }}
+        run: |
+          set -o pipefail
+          ARGS=""
+          if [ -n "$SOURCES" ]; then ARGS="--sources $SOURCES"; fi
+          python scraper/run.py $ARGS --db data/listings.db --out data/latest.json 2>&1 | tee scrape.log
+        continue-on-error: true
+
+      - name: Rebuild JSON from DB (push events / fallback)
+        run: python scraper/run.py --export-only --db data/listings.db --out data/latest.json
+
+      - name: Commit data
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "highland-bot"
+          git config user.email "highland-bot@users.noreply.github.com"
+          git add data/listings.db data/latest.json
+          if git diff --cached --quiet; then
+            echo "no data changes"
+          else
+            git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build web app
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Scrape log summary
+        if: always() && github.event_name != 'push'
+        run: |
+          echo "## Scrape summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          (grep -A 20 "^SUMMARY" scrape.log || echo "no summary") >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
