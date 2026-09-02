@@ -1,6 +1,11 @@
 name: scrape-test
 on:
   workflow_dispatch:
+    inputs:
+      sources:
+        description: "comma-separated source keys"
+        required: false
+        default: "carmax"
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -10,5 +15,5 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r scraper/requirements.txt
-      - run: python scraper/run.py --sources carmax --db /tmp/t.db --out /tmp/latest.json -v
-      - run: python -c "import json;d=json.load(open('/tmp/latest.json'));print(d['stats'], [(s['key'],s['ok'],s['count'],s['error']) for s in d['sources']])"
+      - run: python scraper/run.py --sources "${{ github.event.inputs.sources }}" --db /tmp/t.db --out /tmp/latest.json -v
+      - run: python -c "import json;d=json.load(open('/tmp/latest.json'));print(d['stats']);[print((s['key'],s['ok'],s['count'],s['error'])) for s in d['sources']]"

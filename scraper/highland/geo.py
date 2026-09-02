@@ -54,3 +54,24 @@ def city_latlng(city: str, state: str) -> Optional[tuple[float, float]]:
         return float(hits[0]["lat"]), float(hits[0]["long"])
     except (KeyError, TypeError, ValueError):
         return None
+
+
+@lru_cache(maxsize=256)
+def nearest_place(lat: float, lng: float, state: Optional[str] = "TX") -> Optional[tuple[str, str, str]]:
+    """Reverse-geocode to the nearest US zip centroid -> (city, state, zip). Cheap, offline, approximate."""
+    try:
+        import zipcodes
+    except ImportError:  # pragma: no cover
+        return None
+    cands = zipcodes.filter_by(state=state) if state else zipcodes.list_all()
+    best, best_d = None, 1e9
+    for z in cands:
+        try:
+            d = haversine_mi(lat, lng, float(z["lat"]), float(z["long"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+        if d < best_d:
+            best, best_d = z, d
+    if best is None or best_d > 60:
+        return None
+    return best["city"], best["state"], best["zip_code"]
