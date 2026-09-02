@@ -1,0 +1,14 @@
+name: scrape-test
+on:
+  workflow_dispatch:
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r scraper/requirements.txt
+      - run: python scraper/run.py --sources carmax --db /tmp/t.db --out /tmp/latest.json -v
+      - run: python -c "import json;d=json.load(open('/tmp/latest.json'));print(d['stats'], [(s['key'],s['ok'],s['count'],s['error']) for s in d['sources']])"
