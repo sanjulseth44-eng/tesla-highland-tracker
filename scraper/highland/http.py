@@ -97,6 +97,26 @@ class Http:
         headers: Optional[dict[str, str]] = None,
         ok_statuses: tuple[int, ...] = (200,),
     ) -> cr.Response:
+        return self._request("GET", url, params=params, headers=headers, ok_statuses=ok_statuses)
+
+    def post(
+        self,
+        url: str,
+        json_body: Any = None,
+        headers: Optional[dict[str, str]] = None,
+        ok_statuses: tuple[int, ...] = (200, 201),
+    ) -> cr.Response:
+        return self._request("POST", url, json_body=json_body, headers=headers, ok_statuses=ok_statuses)
+
+    def _request(
+        self,
+        method: str,
+        url: str,
+        params: Optional[dict[str, Any]] = None,
+        json_body: Any = None,
+        headers: Optional[dict[str, str]] = None,
+        ok_statuses: tuple[int, ...] = (200,),
+    ) -> cr.Response:
         if self.respect_robots and not self.allowed(url):
             raise RobotsDisallowed(f"robots.txt disallows {url}")
         parts = urlsplit(url)
@@ -106,18 +126,21 @@ class Http:
         for attempt in range(1, self.max_retries + 1):
             self._throttle(domain, delay)
             try:
-                r = self.session.get(url, params=params, headers=headers, timeout=self.timeout)
+                if method == "POST":
+                    r = self.session.post(url, json=json_body, headers=headers, timeout=self.timeout)
+                else:
+                    r = self.session.get(url, params=params, headers=headers, timeout=self.timeout)
                 self.requests_made += 1
             except Exception as e:  # DNS / TLS / timeout
                 last_err = e
-                log.warning("GET %s attempt %d failed: %s", url, attempt, e)
+                log.warning("%s %s attempt %d failed: %s", method, url, attempt, e)
                 time.sleep(2 ** attempt)
                 continue
             if r.status_code in ok_statuses:
                 return r
             if r.status_code in (429, 500, 502, 503, 504) or (r.status_code == 403 and attempt < self.max_retries):
                 last_err = HttpError(f"HTTP {r.status_code} for {url}", r.status_code, r.text)
-                log.warning("GET %s -> %s (attempt %d)", url, r.status_code, attempt)
+                log.warning("%s %s -> %s (attempt %d)", method, url, r.status_code, attempt)
                 time.sleep(2 ** attempt + random.uniform(0, 1))
                 continue
             raise HttpError(f"HTTP {r.status_code} for {url}", r.status_code, r.text)
@@ -133,3 +156,10 @@ class Http:
 
     def get_text(self, url: str, **kw) -> str:
         return self.get(url, **kw).text
+
+    def post_json(self, url: str, json_body: Any = None, **kw) -> Any:
+        r = self.post(url, json_body=json_body, **kw)
+        try:
+            return r.json()
+        except (json.JSONDecodeError, ValueError) as e:
+            raise HttpError(f"non-JSON response from {url}: {e}", r.status_code, r.text)

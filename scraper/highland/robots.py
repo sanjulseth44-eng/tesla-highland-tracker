@@ -59,14 +59,21 @@ class Robots:
         return cls(groups=[], fetched=False)
 
     def _group_for(self, agent: str) -> Optional[RobotsGroup]:
+        """All groups naming this agent, merged into one (RFC 9309 2.2.1: a file may repeat a
+        user-agent line in several groups -- AutoNation's has ~35 "User-agent: *" groups)."""
         a = agent.lower()
-        for g in self.groups:
-            if any(x != "*" and x in a for x in g.agents):
-                return g
-        for g in self.groups:
-            if "*" in g.agents:
-                return g
-        return None
+        specific = [g for g in self.groups if any(x != "*" and x in a for x in g.agents)]
+        matched = specific or [g for g in self.groups if "*" in g.agents]
+        if not matched:
+            return None
+        if len(matched) == 1:
+            return matched[0]
+        merged = RobotsGroup(agents=list(matched[0].agents))
+        for g in matched:
+            merged.rules.extend(g.rules)
+            if g.crawl_delay is not None:
+                merged.crawl_delay = max(merged.crawl_delay or 0.0, g.crawl_delay)
+        return merged
 
     def crawl_delay(self, agent: str = "*") -> Optional[float]:
         g = self._group_for(agent)

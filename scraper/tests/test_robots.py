@@ -38,3 +38,10 @@ def test_crawl_delay_and_end_anchor():
 def test_empty_disallow_allows_all():
     r = Robots.parse("User-agent: *\nDisallow:\n")
     assert r.can_fetch("/anything")
+
+
+def test_repeated_star_groups_are_merged():
+    txt = "User-agent: *\nDisallow: /a\n\nUser-agent: *\nDisallow: /b\nCrawl-delay: 3\n"
+    r = Robots.parse(txt)
+    assert not r.can_fetch("/a/x") and not r.can_fetch("/b") and r.can_fetch("/c")
+    assert r.crawl_delay() == 3
