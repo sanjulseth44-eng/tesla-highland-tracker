@@ -36,7 +36,8 @@ API_URL = "https://www.tesla.com/inventory/api/v4/inventory-results"
 PAGE_SIZE = 50
 # Tried in order; names not supported by the installed curl_cffi are skipped automatically.
 IMPERSONATION_LADDER = [
-    "safari_ios", "safari18_4_ios", "safari17_2_ios", "chrome_android", "chrome131_android",
+    "safari17_2_ios",   # the one that passed from a GitHub Actions runner on 2026-09-02
+    "safari_ios", "safari18_4_ios", "chrome_android", "chrome131_android",
     "safari", "safari18_0", "safari15_5", "chrome", "chrome131", "chrome124", "chrome110",
     "edge101", "edge99", "firefox133", "firefox135",
 ]
@@ -79,7 +80,7 @@ class TeslaSource(Source):
     label = "Tesla (used)"
     kind = "local"
     homepage = INVENTORY_PAGE
-    impersonate = "safari_ios"
+    impersonate = "safari17_2_ios"
     min_interval_s = 1.5
 
     def _get_page(self, http: Http, offset: int) -> dict[str, Any]:

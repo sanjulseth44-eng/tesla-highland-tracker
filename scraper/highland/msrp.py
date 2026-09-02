@@ -35,7 +35,8 @@ NOTES: dict[str, str] = {
     "2024 Performance": "Launched 2024-04-23 at $52,990, $53,990 within days, $54,990 from May 2024 "
                         "(Electrek, InsideEVs).",
     "2024 Long Range RWD": "Added to the US lineup in July 2024 at $42,490 with 363 mi EPA range (Electrek).",
-    "2025 RWD": "The $38,990 base RWD was phased out of the US lineup during the 2025 model year; few exist.",
+    "2025 RWD": "Tesla dropped the $38,990 LFP base RWD from the US lineup in early October 2024 (InsideEVs, "
+                "Teslarati), so almost no MY2025 base RWD cars exist; Long Range RWD became the entry trim.",
     "2026 naming": "On 2025-10-07 Tesla renamed Long Range RWD/AWD to Premium RWD/AWD ($42,490 / $47,490) and added "
                    "the cheaper Model 3 Standard at $36,990 (321 mi). The dashboard maps Premium -> Long Range so "
                    "year buckets stay comparable; Standard is its own trim.",
