@@ -10,7 +10,15 @@ export function buildModel(data, mode = 'list', now = Date.now()) {
   const raw = Array.isArray(data.listings) ? data.listings : []
 
   // Medians come from ACTIVE listings only, in the current price mode, ignoring UI filters.
-  const buckets = bucketStats(raw.filter((l) => l.status === 'active'), mode)
+  // Market medians count each car once: the same VIN can be listed by a dealer directly (e.g. AutoNation)
+  // and again through an aggregator (Autotrader). Keep the cheapest active listing per VIN.
+  const byVin = new Map()
+  for (const l of raw) {
+    if (l.status !== 'active') continue
+    const prev = byVin.get(l.vin)
+    if (!prev || (l.price ?? Infinity) < (prev.price ?? Infinity)) byVin.set(l.vin, l)
+  }
+  const buckets = bucketStats([...byVin.values()], mode)
   const listings = raw.map((l) => enrich(l, mode, buckets, generatedAt))
   const active = listings.filter((l) => !l.isRemoved)
 
@@ -45,7 +53,7 @@ export function buildModel(data, mode = 'list', now = Date.now()) {
     active: active.length,
     local: active.filter((l) => l.is_local).length,
     carmax: active.filter((l) => l.source_kind === 'carmax').length,
-    newToday: listings.filter((l) => dayKey(l.first_seen) === genDay).length,
+    newToday: active.filter((l) => dayKey(l.first_seen) === genDay).length,
     drops7d: dropIds.size,
     removedRecent: data.stats?.removed_recent ?? listings.filter((l) => l.isRemoved).length,
   }
